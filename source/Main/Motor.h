@@ -15,7 +15,8 @@ class Motor {
         int DIR_pin; // aka MODE3
         int ERR_pin;
 
-        int target_angle;
+        int currentAngle;
+        int targetAngle;
         PRODRIVER motorDriver;
 
     public:

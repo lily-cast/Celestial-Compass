@@ -22,5 +22,22 @@ void Motor::init() {
     motorDriver.settings.mode0Pin = MODE0_pin;
     motorDriver.settings.mode1Pin = MODE1_pin;
     motorDriver.settings.mode2Pin = STEP_pin;
+    motorDriver.settings.mode3Pin = DIR_pin;
+    motorDriver.settings.errorPin = ERR_pin;
 
+    motorDriver.begin();
+
+    currentAngle = 0;
+    targetAngle = 0;
+}
+
+void Motor::set_angle(int angle) {
+  this->targetAngle = angle;
+}
+
+void Motor::update() {
+  // check to see if we're at the destination
+  if(currentAngle != targetAngle) {
+    motorDriver.step(1,1); // take one step in the ccw direction
+  }
 }
