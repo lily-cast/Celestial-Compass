@@ -47,8 +47,8 @@ float Motor::getAngle() {
   return currentAngle;
 }
 
-bool Motor::checkAngle(float target) {
-  // checks if the current angle is within a step size of the target
+bool Motor::checkAngle() {
+  // checks if the current angle is within a step size of the target, useful for while loops and the like
   return abs(targetAngle-currentAngle) <= (STEP_SIZE * stepResolution);
 }
 

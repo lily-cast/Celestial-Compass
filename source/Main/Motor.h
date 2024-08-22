@@ -21,7 +21,7 @@ class Motor {
         void init();
         void setAngle(float angle);
         float getAngle();
-        bool checkAngle(float target);
+        bool checkAngle();
         void setSpeed(float deg_sec);
         void update();
         
