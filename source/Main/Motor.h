@@ -2,7 +2,6 @@
 #define MY_MOTOR_H
 
 #include <Arduino.h>
-#include "SparkFun_ProDriver_TC78H670FTG_Arduino_Library.h"
 
 class Motor {
     private:
@@ -15,17 +14,23 @@ class Motor {
         int DIR_pin; // aka MODE3
         int ERR_pin;
 
-        int currentAngle;
-        int targetAngle;
-        PRODRIVER motorDriver;
-
+        // timing variables
+        unsigned long lastUpdate;
     public:
-        Motor(int STBY_pin, int EN_pin, int MODE0_pin, int MODE1_pin, int STEP_pin, int DIR_pin, int ERR_pin);
+        Motor(int STBY_pin, int EN_pin, int MODE0_pin, int MODE1_pin, int STEP_pin, int DIR_pin);
         void init();
-        void set_angle(int angle);
-        void get_angle();
-        void halt_motor(bool state);
+        void setAngle(float angle);
+        float getAngle();
+        bool checkAngle(float target);
+        void setSpeed(float deg_sec);
         void update();
+        
+        float stepResolution;
+
+        // angle variables
+        float currentAngle;
+        float targetAngle;
+        float angularVelocity; 
 };
 
 #endif
