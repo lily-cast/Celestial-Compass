@@ -1,3 +1,7 @@
+// this class is made for the TC78H670FTG stepper motor driver. Control
+// is given over the desired degrees and angular velocity of the motor
+// with the intention to call the update() function in the loop() in main.ino
+
 #include "Motor.h"
 #include "CONFIG.h"
 
