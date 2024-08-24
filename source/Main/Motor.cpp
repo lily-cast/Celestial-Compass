@@ -45,6 +45,7 @@ void Motor::init() {
     angularVelocity = 50; // the default deg/s that we want to use
     lastUpdate = millis();
     currentAngle = 0;
+    direction = 1; //  default to CCW
 }
 
 float Motor::getAngle() {
@@ -61,7 +62,18 @@ bool Motor::checkAngle() {
 }
 
 void Motor::setAngle(float angle) {
+  // correct for anything out of 0-360
+  while(angle < 0) {
+    angle += 360;
+  }
+  while(angle > 360) {
+    angle -= 360;
+  }
   this->targetAngle = angle;
+}
+
+void Motor::setDirection(bool direction) {
+  this->direction = direction;
 }
 
 void Motor::update() {
@@ -79,7 +91,7 @@ void Motor::update() {
       // reset the timer
       lastUpdate = millis();
       // now we check what direction to go
-      if(targetAngle > currentAngle) {
+      if(direction) {
         // need to rotate CCW
         digitalWrite(DIR_pin, LOW);
 

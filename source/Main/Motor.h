@@ -20,9 +20,12 @@ class Motor {
 
     // timing variables
     unsigned long lastUpdate;
+
+    bool direction;
   public:
     Motor(int pins[]);
     void init();
+    void setDirection(bool direction); // 1 is CCW, 0 is CW
     void setAngle(float angle); // allows the user to set a desired angle for the motor to go to
     float getAngle(); // gets the current angle
     bool checkAngle(); // checks if the motor is at the desired angle or not (useful for calling update only when required)
