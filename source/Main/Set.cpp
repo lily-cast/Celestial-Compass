@@ -47,5 +47,58 @@ void Set::setAzAlt(float Az, float Alt) {
   // now let's figure out what direction to go
   // first, get the current location of the P motor. Only base movement off of this one
   float currentP = mP.getAngle()/gr_motor_P;
-  // now, make sure 
+  // now, subtract and then make sure the angle is within bounds
+  float deltaAngle = targetAzi - currentP;
+  while(deltaAngle < 0) {
+    deltaAngle += 360;
+  }
+  while(deltaAngle>=360) {
+    deltaAngle -= 360;
+  }
+  // now, check to see what side we should be on
+  bool directionP = (deltaAngle <= 180);
+  // set the direction of the P motor
+  mP.setDirection(directionP);
+
+  // now, we need to know if the R motor should move together or with
+  // the P gr_motor_P
+  // only move in opposite directions if final positions are splitting away from both poitsn
+  float currentR = mR.getAngle()/gr_motor_R;
+  float deltaP = Az - currentP;
+  if(deltaP < -180) {
+    deltaP += 360;
+  } else if(deltaP >= 180) {
+    deltaP -= 360;
+  }
+
+  float deltaR = (Az + extraAngle) - currentR;
+  if(deltaR < -180) {
+    deltaP += 360;
+  } else if(deltaR >= 180) {
+    deltaR -= 360;
+  }
+  
+  Serial.println("DeltaP: " + String(deltaP));
+  Serial.println("DeltaR: " + String(deltaR));
+  // test to see if we would optimally go opposite directions
+  if(deltaR*deltaP < 0) {
+    Serial.println("Might need to flip directions...");
+    // now make sure we don't have any intersections
+    if(deltaP > 0 && Az < currentR) {
+      mR.setDirection(!directionP);
+      Serial.println("Flipping directions");
+    } else if(deltaP < 0 && currentP < (Az + extraAngle)) {
+      mR.setDirection(!directionP);
+      Serial.println("Flipping directions");
+    } else {
+      mR.setDirection(directionP);
+      Serial.println("keeping them the same!");
+    }
+  } else {
+    mR.setDirection(directionP);
+  }
+}
+
+bool Set::checkMotors() {
+  return (mP.checkAngle() && mR.checkAngle());
 }

@@ -17,6 +17,7 @@ class Motor {
     int STEP_pin; // aka MODE2
     int DIR_pin; // aka MODE3
     int ERR_pin;
+    int VREF_pin;
 
     // timing variables
     unsigned long lastUpdate;
@@ -33,6 +34,10 @@ class Motor {
     void update(); // updates the motor position, intended to be called every loop
     
     float stepResolution;
+
+    // motor settings
+    void setCurrentLimit(float limit); // sets the current limit 
+    void enable(bool onoff); // turns the motor on or off
 
     // angle variables
     float currentAngle;

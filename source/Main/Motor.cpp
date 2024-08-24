@@ -14,7 +14,7 @@ Motor::Motor(int pins[]) {
     this->MODE1_pin = pins[3];
     this->STEP_pin = pins[4]; // also MODE2
     this->DIR_pin = pins[5]; // also MODE3
-
+    this->VREF_pin = pins[6];
     init();
 };
 
@@ -26,6 +26,7 @@ void Motor::init() {
     pinMode(MODE1_pin, OUTPUT);
     pinMode(STEP_pin, OUTPUT);
     pinMode(DIR_pin, OUTPUT);
+    //pinMode(VREF_pin, OUTPUT);
 
     // make sure we're in standby
     digitalWrite(STBY_pin, LOW);
@@ -41,6 +42,10 @@ void Motor::init() {
     // now we release standby and enable the motor to get the motor going
     digitalWrite(STBY_pin, HIGH);
     digitalWrite(EN_pin, HIGH);    
+
+    // start with a .6 A limit on the motor
+    // 3.3V is equal to max current
+    float desiredV = (float) 0.6 / (float) 1.1;
 
     angularVelocity = 50; // the default deg/s that we want to use
     lastUpdate = millis();
@@ -79,6 +84,7 @@ void Motor::setDirection(bool direction) {
 void Motor::update() {
   // first, let's make sure we're already at our angle, or at least within a single step of it
   if(abs(targetAngle-currentAngle) >= (STEP_SIZE * stepResolution)) {
+    enable(1);
     // we'll define positive angles as positive from the right hand rule. So if the target is
     // 15 deg and we're at 0 deg, rotate the motor CCW
   
@@ -93,24 +99,39 @@ void Motor::update() {
       // now we check what direction to go
       if(direction) {
         // need to rotate CCW
-        digitalWrite(DIR_pin, LOW);
-
-        // step the motor
-        digitalWrite(STEP_pin, HIGH);
-        digitalWrite(STEP_pin, LOW);
-
-        currentAngle += STEP_SIZE * stepResolution;
-        
-      } else {
-        // rotate CW
         digitalWrite(DIR_pin, HIGH);
 
         // step the motor
         digitalWrite(STEP_pin, HIGH);
         digitalWrite(STEP_pin, LOW);
 
+        currentAngle += STEP_SIZE * stepResolution;
+        if(currentAngle >= 360) {
+          currentAngle -= 360;
+        }
+      } else {
+        // rotate CW
+        digitalWrite(DIR_pin, LOW);
+
+        // step the motor
+        digitalWrite(STEP_pin, HIGH);
+        digitalWrite(STEP_pin, LOW);
+
         currentAngle -= STEP_SIZE * stepResolution;
+        if(currentAngle < 0) {
+          currentAngle += 360;
+        }
       }
     }
+  } else {
+    enable(0);
   }
+}
+
+void Motor::setCurrentLimit(float limit) {
+
+}
+
+void Motor::enable(bool onoff) {
+  digitalWrite(EN_pin, onoff);
 }

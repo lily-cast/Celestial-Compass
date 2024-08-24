@@ -33,6 +33,7 @@ class Set {
     void update(); // updates the position of the motors and tracking of object
     void trackObject(int ID); // tells the Set which object ID to track
     void setAzAlt(float Az, float Alt); // forcibly sets the azimuth and alititude, will most likely be removed later
+    bool checkMotors(); // checks if motors are in place
 };
 
 #endif
