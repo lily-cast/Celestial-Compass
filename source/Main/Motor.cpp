@@ -100,6 +100,7 @@ void Motor::update() {
         digitalWrite(STEP_pin, LOW);
 
         currentAngle += STEP_SIZE * stepResolution;
+        
       } else {
         // rotate CW
         digitalWrite(DIR_pin, HIGH);

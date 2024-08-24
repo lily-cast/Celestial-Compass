@@ -43,4 +43,9 @@ void Set::setAzAlt(float Az, float Alt) {
 
   mR.setSpeed(maxSpeed);
   mP.setSpeed(Az/moveTime); // just calculate distance/time to get the speed
+
+  // now let's figure out what direction to go
+  // first, get the current location of the P motor. Only base movement off of this one
+  float currentP = mP.getAngle()/gr_motor_P;
+  // now, make sure 
 }
