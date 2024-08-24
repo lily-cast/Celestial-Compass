@@ -6,17 +6,17 @@
 #include "CONFIG.h"
 
 
-Motor::Motor(int STBY_pin, int EN_pin, int MODE0_pin, int MODE1_pin, int STEP_pin, int DIR_pin) {
+Motor::Motor(int pins[]) {
     // store intialized pins as local variables
-    this->STBY_pin = STBY_pin;
-    this->EN_pin = EN_pin;
-    this->MODE0_pin = MODE0_pin;
-    this->MODE1_pin = MODE1_pin;
-    this->STEP_pin = STEP_pin; // also MODE2
-    this->DIR_pin = DIR_pin; // also MODE3
+    this->STBY_pin = pins[0];
+    this->EN_pin = pins[1];
+    this->MODE0_pin = pins[2];
+    this->MODE1_pin = pins[3];
+    this->STEP_pin = pins[4]; // also MODE2
+    this->DIR_pin = pins[5]; // also MODE3
 
     init();
-}
+};
 
 void Motor::init() {
     // set the output mode of all the motor pins
@@ -49,6 +49,10 @@ void Motor::init() {
 
 float Motor::getAngle() {
   return currentAngle;
+}
+
+void Motor::setSpeed(float newSpeed) {
+  this->angularVelocity = newSpeed;
 }
 
 bool Motor::checkAngle() {
@@ -94,7 +98,6 @@ void Motor::update() {
 
         currentAngle -= STEP_SIZE * stepResolution;
       }
-      Serial.println(currentAngle);
     }
   }
 }

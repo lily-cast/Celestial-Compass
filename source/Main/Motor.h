@@ -21,7 +21,7 @@ class Motor {
     // timing variables
     unsigned long lastUpdate;
   public:
-    Motor(int STBY_pin, int EN_pin, int MODE0_pin, int MODE1_pin, int STEP_pin, int DIR_pin);
+    Motor(int pins[]);
     void init();
     void setAngle(float angle); // allows the user to set a desired angle for the motor to go to
     float getAngle(); // gets the current angle

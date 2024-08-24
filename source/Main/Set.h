@@ -23,14 +23,16 @@ class Set {
     // information about the object tracking
     int objectID; // ID of the object current being tracked
     float updateFreq; // rate at which the location of the tracked object is updated
+    float currentAzi; // current azimuth
+    float cuurentAlt; // current altitude
     float targetAzi; // desired azimuth to point to (deg), where 0 deg is directly north
     float targetAlt; // desired altitude (deg), where 0 deg is perfectly level with the horizon
   public:
-    Set();
+    Set(int pinsP[], int pinsR[], float gr_motor_P, float gr_motor_R, float gr_R_Alt);
     void init();
     void update(); // updates the position of the motors and tracking of object
     void trackObject(int ID); // tells the Set which object ID to track
     void setAzAlt(float Az, float Alt); // forcibly sets the azimuth and alititude, will most likely be removed later
-}
+};
 
 #endif
