@@ -135,3 +135,12 @@ void Motor::setCurrentLimit(float limit) {
 void Motor::enable(bool onoff) {
   digitalWrite(EN_pin, onoff);
 }
+
+void Motor::setStepResolution(int res) {
+  // runs the motor through the standby on/off process, resetting the step size in the proccess
+  // first, turn on stanby mode
+
+  digitalWrite(STBY_pin, LOW); // this is active on the low
+
+  // next, run through each case of 
+}

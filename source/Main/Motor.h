@@ -38,6 +38,7 @@ class Motor {
     // motor settings
     void setCurrentLimit(float limit); // sets the current limit 
     void enable(bool onoff); // turns the motor on or off
+    void setStepResolution(int res); // sets the step size to be 1:res, must be in a power of 2
 
     // angle variables
     float currentAngle;
