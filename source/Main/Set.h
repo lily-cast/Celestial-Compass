@@ -8,6 +8,7 @@
 
 #include <Arduino.h>
 #include "Motor.h"
+#include "Astronomy.h"
 
 class Set {
   private:
@@ -27,6 +28,9 @@ class Set {
     float cuurentAlt; // current altitude
     float targetAzi; // desired azimuth to point to (deg), where 0 deg is directly north
     float targetAlt; // desired altitude (deg), where 0 deg is perfectly level with the horizon
+
+    // timing variables
+    unsigned long lastUpdate; // time since the last location update
   public:
     Set(int pinsP[], int pinsR[], float gr_motor_P, float gr_motor_R, float gr_R_Alt);
     void init();
@@ -35,6 +39,8 @@ class Set {
     void setAzAlt(float Az, float Alt); // forcibly sets the azimuth and alititude, will most likely be removed later
     bool checkMotors(); // checks if motors are in place
     void setStepResolution(int res); // sets both motors to the desired resolution
+
+    void Set::calculateAzAlt(); // calculates azimuth and altitude
 };
 
 #endif

@@ -14,13 +14,22 @@ Set::Set(int pinsP[], int pinsR[], float gr_motor_P, float gr_motor_R, float gr_
 
 void Set::init() {
   // set our default parameters
-  this->updateFreq = 1; // update the object loccation once every second
+  this->updateFreq = 5 * 1000; // update the object loccation once every 5 seconds
   this->maxSpeed = 50; // max speed in deg/sec
   this->targetAzi = 0;
   this->targetAlt = 0;
+  this->lastUpdate = millis();
+
+  this->objectID = 0; // this will get fleshed out more, but for now let's assume that 0 is polaris
 }
 
 void Set::update() {
+  // check to see if we need to update the location of the tracked object
+  if(millis() >= lastUpdate + updateFreq) {
+    // check the location of the object
+    calculateAzAlt();
+  }
+  // finally, update the motors
   mR.update();
   mP.update();
 }
@@ -106,4 +115,9 @@ bool Set::checkMotors() {
 void Set::setStepResolution(int res) {
   mP.setStepResolution(res);
   mR.setStepResolution(res);
+}
+
+void Set::calculateAzAlt() {
+  // get the current time
+  // TEST //
 }
