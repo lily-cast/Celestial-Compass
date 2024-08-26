@@ -102,3 +102,8 @@ void Set::setAzAlt(float Az, float Alt) {
 bool Set::checkMotors() {
   return (mP.checkAngle() && mR.checkAngle());
 }
+
+void Set::setStepResolution(int res) {
+  mP.setStepResolution(res);
+  mR.setStepResolution(res);
+}

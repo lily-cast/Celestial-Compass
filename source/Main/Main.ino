@@ -18,8 +18,11 @@ void setup() {
   while(!Set1.checkMotors()) {
     Set1.update();
   }
+
+
   delay(2 * 1000);
   Set1.setAzAlt(200,90);
+  Set1.setStepResolution(16);
   while(!Set1.checkMotors()) {
     Set1.update();
   }

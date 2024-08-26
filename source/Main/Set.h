@@ -34,6 +34,7 @@ class Set {
     void trackObject(int ID); // tells the Set which object ID to track
     void setAzAlt(float Az, float Alt); // forcibly sets the azimuth and alititude, will most likely be removed later
     bool checkMotors(); // checks if motors are in place
+    void setStepResolution(int res); // sets both motors to the desired resolution
 };
 
 #endif

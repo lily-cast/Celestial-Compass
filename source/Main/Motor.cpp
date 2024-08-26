@@ -32,16 +32,11 @@ void Motor::init() {
     digitalWrite(STBY_pin, LOW);
 
     // set the step resolution to 1/32
-    digitalWrite(MODE0_pin, HIGH);
-    digitalWrite(MODE1_pin, LOW);
-    digitalWrite(STEP_pin, HIGH);
-    digitalWrite(DIR_pin, HIGH);
-
-    stepResolution = ((float)1/(float)32);
+    setStepResolution(8);
 
     // now we release standby and enable the motor to get the motor going
     digitalWrite(STBY_pin, HIGH);
-    digitalWrite(EN_pin, HIGH);    
+    enable(true);
 
     // start with a .6 A limit on the motor
     // 3.3V is equal to max current
@@ -128,19 +123,100 @@ void Motor::update() {
   }
 }
 
-void Motor::setCurrentLimit(float limit) {
-
-}
-
 void Motor::enable(bool onoff) {
   digitalWrite(EN_pin, onoff);
 }
 
 void Motor::setStepResolution(int res) {
+  // TODO: store pin inputs in an array and only call digital write outside of the switch case
+
   // runs the motor through the standby on/off process, resetting the step size in the proccess
   // first, turn on stanby mode
 
   digitalWrite(STBY_pin, LOW); // this is active on the low
 
-  // next, run through each case of 
+  // next, run through each case of what resolutions we can do
+  switch(res) {
+    case 1: 
+      // H, L, L, L
+      digitalWrite(DIR_pin, HIGH);
+      digitalWrite(STEP_pin, LOW);
+      digitalWrite(MODE1_pin, LOW);
+      digitalWrite(MODE0_pin, LOW);
+      break;
+
+    case 2:
+      // H, L, L, H
+      digitalWrite(DIR_pin, HIGH);
+      digitalWrite(STEP_pin, LOW);
+      digitalWrite(MODE1_pin, LOW);
+      digitalWrite(MODE0_pin, HIGH);
+      break;
+
+    case 4:
+      // H, L, H, L
+      digitalWrite(DIR_pin, HIGH);
+      digitalWrite(STEP_pin, LOW);
+      digitalWrite(MODE1_pin, HIGH);
+      digitalWrite(MODE0_pin, LOW);
+      break;
+
+    case 8:
+      // H, L, H, H
+      digitalWrite(DIR_pin, HIGH);
+      digitalWrite(STEP_pin, LOW);
+      digitalWrite(MODE1_pin, HIGH);
+      digitalWrite(MODE0_pin, HIGH);
+      break;
+
+    case 16:
+      // H, H, L, L
+      digitalWrite(DIR_pin, HIGH);
+      digitalWrite(STEP_pin, HIGH);
+      digitalWrite(MODE1_pin, LOW);
+      digitalWrite(MODE0_pin, LOW);
+      break;
+      
+    case 32:
+      // H, H, L, H
+      digitalWrite(DIR_pin, HIGH);
+      digitalWrite(STEP_pin, HIGH);
+      digitalWrite(MODE1_pin, LOW);
+      digitalWrite(MODE0_pin, HIGH);
+      break;
+
+    case 64:
+      // H, H, H, L
+      digitalWrite(DIR_pin, HIGH);
+      digitalWrite(STEP_pin, HIGH);
+      digitalWrite(MODE1_pin, HIGH);
+      digitalWrite(MODE0_pin, LOW);
+      break;
+
+    case 128:
+      // H, H, H, H
+      digitalWrite(DIR_pin, HIGH);
+      digitalWrite(STEP_pin, HIGH);
+      digitalWrite(MODE1_pin, HIGH);
+      digitalWrite(MODE0_pin, HIGH);
+      break;
+
+    default:
+      // just do full step resolution
+      // H, L, L, L
+      digitalWrite(DIR_pin, HIGH);
+      digitalWrite(STEP_pin, LOW);
+      digitalWrite(MODE1_pin, LOW);
+      digitalWrite(MODE0_pin, LOW);
+      
+      // forcibly set the res variable to 1, for use when calculating step size
+      res = 1;
+      break;
+  }
+  // disable standby
+  digitalWrite(STBY_pin, HIGH);
+
+  // reset the step size variable based on the provided resolution
+  // reset step resolution variable
+      stepResolution = ((float)1/(float)res);
 }
