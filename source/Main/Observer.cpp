@@ -15,7 +15,7 @@ void Observer::init() {
   // likewise, manually set this for now
   this->currentYear = 2024;
   this->currentMonth = 8;
-  this->currentDay = 26;
+  this->currentDay = 27;
   this->currentTime = 23.5; // just pretend it's noon UTC
 }
 
@@ -36,8 +36,8 @@ Horizon Observer::calculatePosition(int objectID) {
       break;
     case 3:
       // arcturus, part of the bootes constellation
-      rightAscension = 15 * (14 + (16/60) + (46.6/3600));
-      declination = (19 + (3/60) + (25.7/3600));
+      rightAscension = 15 * (5 + (18/60) + (30.1/3600));
+      declination = (46 + (1/60) + (14.3/3600));
       break;
   }
   // grab the sidereal time
@@ -45,7 +45,7 @@ Horizon Observer::calculatePosition(int objectID) {
   Serial.println("LST: " + String(LST));
 
   // convert RA to Hour Angle
-  float HA = LST - rightAscension;
+  float HA = LST*15 - rightAscension;
 
   // constrain to 0-360
   while(HA < 0) {HA += 360;}
@@ -57,8 +57,8 @@ Horizon Observer::calculatePosition(int objectID) {
   float lat = (PI/(float)180) * latitude;
 
   // convert to azimuth and altitude
-  float altitude = asin(sin(dec)*sin(lat) + cos(dec)*cos(HA));
-  float azimuth = acos((sin(dec)-sin(altitude)*sin(lat))/(cos(altitude)*cos(lat)));
+  float azimuth = atan2((sin(HA)),(cos(HA)*sin(lat) - tan(dec)*cos(lat))) - PI;
+  float altitude = asin(sin(lat)*sin(dec) + cos(lat)*cos(dec)*cos(HA));
   
   // convert back to degrees
   azimuth = (180/PI) * azimuth;

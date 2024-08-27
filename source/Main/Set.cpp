@@ -15,7 +15,7 @@ Set::Set(int pinsP[], int pinsR[], float gr_motor_P, float gr_motor_R, float gr_
 void Set::init() {
   // set our default parameters
   this->updateFreq = 5 * 1000; // update the object loccation once every 5 seconds
-  this->maxSpeed = 50; // max speed in deg/sec
+  this->maxSpeed = 10; // max speed in deg/sec
   this->targetAzi = 0;
   this->targetAlt = 0;
   this->lastUpdate = millis();

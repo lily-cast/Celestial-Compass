@@ -14,17 +14,18 @@ Observer Observer1;
 //Motor test1R(pins_1R);
 void setup() {
   Serial.begin(115200);
+  Set1.setStepResolution(16);
   Observer1.calculatePosition(3);
   // initialize serial and create our motor
-  Set1.setAzAlt(40,17);
+  Set1.setAzAlt(40,25);
   
   while(!Set1.checkMotors()) {
     Set1.update();
   }
-
+  Set1.setStepResolution(16);
   delay(2 * 1000);
   Set1.setAzAlt(200,90);
-  Set1.setStepResolution(32);
+  //Set1.setStepResolution(64);
   while(!Set1.checkMotors()) {
     Set1.update();
   }

@@ -42,7 +42,7 @@ void Motor::init() {
     // 3.3V is equal to max current
     float desiredV = (float) 0.6 / (float) 1.1;
 
-    angularVelocity = 50; // the default deg/s that we want to use
+    angularVelocity = 10; // the default deg/s that we want to use
     lastUpdate = millis();
     currentAngle = 0;
     direction = 1; //  default to CCW
