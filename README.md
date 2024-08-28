@@ -7,6 +7,20 @@ The central design of the celestial compass is achieved by rotating a pair of co
 By moving the bevel gear on the inside of the two arms, the gear attached to the outside arm will pivot, changing the altitude of the point. By moving both arms together, the azimuth of the point will be changed. The key here is that it is only the relative motion of the two arms that generate changes in the altitude. 
 
 ## The Code
-The main concept of this project is centered around the relative motion of the two gears, but that will arguably be the easiest part of the project. The harder part will be figuring out exactly where to look in the sky. The easiest way to obtain the location of objects would be to ask some sort of API to grab them for me, but for the smaller version of this project, it will be more desirable to model this information without the need to access any sort of internet connection. This can be done by using mathematical models for the planets in our solar system and for the objects that don't move relative to the rest of the celestial sphere, I can just grab their right ascension and declination and store those for later access. This does mean that the desktop version of this project will not be able to access any real time data for things such as satellites and aircraft, which is something I hope the full scale version will be able to do.
+This program is intended to be used on Arduino based microcontrollers, and the core structure is split into a heirarchy of classes. The curernt ones implemented are the **Motor**, **Set**, and **Observer** classes.
 
-The desktop version will be running off of a raspberry pi pico and will be coded using C++ 
+### Motor Class
+The **Motor** class deals with the programming and control of an given motor. Control is given over the angular velocity of the motor as well as the desired position. By calling the **update()** function (ideally every loop), the motor will automatically know when to step in order to achieve the desired angle and velocity. Since the TC78H670FTG driver that this is based around is able to microstep the motor, there is an additional function that allows setting the step resolution during the runtime of the program.
+
+### Set Class
+The **Set** class (a.k.a. motor set) controls the relative motion of two gears, resulting in the movement of one object. Given a desired azimuth and altitude, the Set will govern its motors to move to the desired positions, taking into account the various gear ratios that are inbetween the stepper motor and its output. The Set class is also responsible for gathering the required azimuth and altitude of a specific object. When a motor set is given an object ID, it will periodically get that information based on the update frequency of the Set.
+
+### Observer Class
+The **Observer** class is meant to provide information to the various Sets, mainly azimuth and altitude calculations. Given a specific location and time, the observer is able to transform right ascension and declination coordinates of various stellar object in the celestial sphere.
+
+## TO-DO
+There is a lot left to do on this project, primarily on the hardware side but also on the code side.
+- **Solar objects:** the observer needs to be able to keep track of objects within our solar system, which is a little more complicated than stars
+- **Time and Location data:** right now, the data for the current time and location is just hardwired into the code, but a RTC and GPS module will be needed to update this in real time.
+- **Magnetometer and magnetic declination:** because the orientation of the object can change, a magnetometer will be used to keep track of the compass' orientation with respect to north. Because we are interested in the location of true north rather than magnetic north, we need to adjust for this based on the magnetic declination of a given point. Due to the complexities involved with this, this might get turned into a gyroscope and a calibrate button.
+- **Object lookup:** find out some way to efficiently store right ascension and declination of a bunch of stellar objects.
