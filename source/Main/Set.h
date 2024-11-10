@@ -8,7 +8,6 @@
 
 #include <Arduino.h>
 #include "Motor.h"
-#include "Astronomy.h"
 
 class Set {
   private:
@@ -26,6 +25,10 @@ class Set {
     float updateFreq; // rate at which the location of the tracked object is updated
     float currentAzi; // current azimuth
     float cuurentAlt; // current altitude
+
+    float currentP; // current angular position of P motor
+    float currentR; // current angular position of R motor
+    
     float targetAzi; // desired azimuth to point to (deg), where 0 deg is directly north
     float targetAlt; // desired altitude (deg), where 0 deg is perfectly level with the horizon
 

@@ -39,6 +39,10 @@ void Set::setAzAlt(float Az, float Alt) {
   this->targetAzi = Az;
   this->targetAlt = Alt;
 
+  // first, get the current location of the P and R motor
+  currentP = mP.getAngle()/gr_motor_P;
+  currentR = mR.getAngle()/gr_motor_R;
+
   mP.setAngle(Az * gr_motor_P); // this will always be exactly the azimuth multiplied by the gear ratio
   // in order to calculate the angle of the R gear, we need to add
   // the desired increase in height (relative to the gear ratios) to
@@ -46,16 +50,8 @@ void Set::setAzAlt(float Az, float Alt) {
   float extraAngle = Alt / gr_R_Alt; 
   mR.setAngle((Az+extraAngle) * gr_motor_R);
 
-  // now we set the speeds so they get there at the same time
-  // first calculate the time for the R gear to get there
-  double moveTime = (Az+extraAngle) / maxSpeed;
-
-  mR.setSpeed(maxSpeed);
-  mP.setSpeed(Az/moveTime); // just calculate distance/time to get the speed
-
   // now let's figure out what direction to go
-  // first, get the current location of the P motor. Only base movement off of this one
-  float currentP = mP.getAngle()/gr_motor_P;
+  // we can use the current position of the P motor from before
   // now, subtract and then make sure the angle is within bounds
   float deltaAngle = targetAzi - currentP;
   while(deltaAngle < 0) {
@@ -82,30 +78,37 @@ void Set::setAzAlt(float Az, float Alt) {
 
   float deltaR = (Az + extraAngle) - currentR;
   if(deltaR < -180) {
-    deltaP += 360;
+    deltaR += 360;
   } else if(deltaR >= 180) {
     deltaR -= 360;
   }
   
   Serial.println("DeltaP: " + String(deltaP));
   Serial.println("DeltaR: " + String(deltaR));
+
+  bool oppositeMovement = false; // tracks if we move the motors in opposite directions
+
   // test to see if we would optimally go opposite directions
   if(deltaR*deltaP < 0) {
     Serial.println("Might need to flip directions...");
     // now make sure we don't have any intersections
     if(deltaP > 0 && Az < currentR) {
       mR.setDirection(!directionP);
-      Serial.println("Flipping directions");
+      oppositeMovement = true;
+
     } else if(deltaP < 0 && currentP < (Az + extraAngle)) {
       mR.setDirection(!directionP);
-      Serial.println("Flipping directions");
+      oppositeMovement = true;
+
     } else {
       mR.setDirection(directionP);
-      Serial.println("keeping them the same!");
     }
   } else {
     mR.setDirection(directionP);
   }
+
+  // now we need to decide the speed at which the motors rotate
+
 }
 
 bool Set::checkMotors() {
