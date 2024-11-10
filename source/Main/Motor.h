@@ -19,16 +19,18 @@ class Motor {
     int ERR_pin;
     int VREF_pin;
 
+    float gear_ratio;
+
     // timing variables
     unsigned long lastUpdate;
 
     bool direction;
   public:
-    Motor(int pins[]);
+    Motor(int pins[], float GR);
     void init();
     void setDirection(bool direction); // 1 is CCW, 0 is CW
     void setAngle(float angle); // allows the user to set a desired angle for the motor to go to
-    float getAngle(); // gets the current angle
+    float getAngle(); // gets the current angle, adjusted by the gearing of the motor
     bool checkAngle(); // checks if the motor is at the desired angle or not (useful for calling update only when required)
     void setSpeed(float deg_sec); // sets the desired speed of the motor in deg/sec
     void update(); // updates the motor position, intended to be called every loop
@@ -39,11 +41,20 @@ class Motor {
     void setCurrentLimit(float limit); // sets the current limit 
     void enable(bool onoff); // turns the motor on or off
     void setStepResolution(int res); // sets the step size to be 1:res, must be in a power of 2
+    void setGearRatio(float GR); // sets the internal gear ratio
 
     // angle variables
-    float currentAngle;
-    float targetAngle;
-    float angularVelocity; 
+
+    // keep track of the actual gearing of the internal motor
+    float currentAngle_real;
+    float targetAngle_real;
+
+    // keeps track of the gearing as seen by the set
+    float currentAngle_geared;
+    float targetAngle_geared;
+
+    float maxAngularVelocity; 
+    float angularSpeed; // expressed as a decimal from 0 - 1
 };
 
 #endif

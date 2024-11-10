@@ -12,8 +12,6 @@
 class Set {
   private:
     // store information about the gear ratios
-    float gr_motor_P; // ratio of motor diameter to P gear diameter
-    float gr_motor_R; // ratio of motor diameter to R gear diameter
     float gr_R_Alt; // ratio of R gear diameter to altitude control diameter
     float maxSpeed; // the maximum speed the fastest gear will spin (usually the R gear)
 

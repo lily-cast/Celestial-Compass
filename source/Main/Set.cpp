@@ -3,11 +3,9 @@
 #include "Set.h"
 
 Set::Set(int pinsP[], int pinsR[], float gr_motor_P, float gr_motor_R, float gr_R_Alt)
-    : mR(pinsR), mP(pinsP) {
+    : mR(pinsR, gr_motor_R), mP(pinsP, gr_motor_P) {
   // needs to be given the pins for each motor to correctly work, start by setting those up
-  this->gr_motor_P = gr_motor_P;
-  this->gr_motor_R = gr_motor_R;
-  this->gr_R_Alt = 3;
+  this->gr_R_Alt = gr_R_Alt;
 
   init();
 }
@@ -40,15 +38,15 @@ void Set::setAzAlt(float Az, float Alt) {
   this->targetAlt = Alt;
 
   // first, get the current location of the P and R motor
-  currentP = mP.getAngle()/gr_motor_P;
-  currentR = mR.getAngle()/gr_motor_R;
+  currentP = mP.getAngle();
+  currentR = mR.getAngle();
 
-  mP.setAngle(Az * gr_motor_P); // this will always be exactly the azimuth multiplied by the gear ratio
+  mP.setAngle(Az); // this will always be exactly the azimuth multiplied by the gear ratio
   // in order to calculate the angle of the R gear, we need to add
   // the desired increase in height (relative to the gear ratios) to
   // the angle that the P gear needs to be at
   float extraAngle = Alt / gr_R_Alt; 
-  mR.setAngle((Az+extraAngle) * gr_motor_R);
+  mR.setAngle(Az+extraAngle);
 
   // now let's figure out what direction to go
   // we can use the current position of the P motor from before
@@ -68,7 +66,7 @@ void Set::setAzAlt(float Az, float Alt) {
   // now, we need to know if the R motor should move together or with
   // the P gr_motor_P
   // only move in opposite directions if final positions are splitting away from both poitsn
-  float currentR = mR.getAngle()/gr_motor_R;
+  float currentR = mR.getAngle();
   float deltaP = Az - currentP;
   if(deltaP < -180) {
     deltaP += 360;
@@ -109,6 +107,27 @@ void Set::setAzAlt(float Az, float Alt) {
 
   // now we need to decide the speed at which the motors rotate
 
+  // first, check if we need to correct for additional travel made by the R motor when
+  // it makes more than 180 deg movement 
+  if(deltaR * deltaP <0 && !oppositeMovement) {
+    deltaR = abs(360 - abs(deltaR)); // calculate new magnitude of movement for R motor
+  }
+
+  // now assign the max movement to whichever motor moves the most
+  // first, check to make sure we're moving both
+  if(deltaR != 0 && deltaP != 0) {
+    if(abs(deltaR) > abs(deltaP)) {
+      mR.setSpeed(1);
+      mP.setSpeed(abs(deltaP) / abs(deltaR));
+    } else {
+      mP.setSpeed(1);
+      mR.setSpeed(abs(deltaR) / abs(deltaP));
+    }
+  } else if(deltaR == 0) {
+    mP.setSpeed(1);
+  } else {
+    mR.setSpeed(1);
+  }
 }
 
 bool Set::checkMotors() {

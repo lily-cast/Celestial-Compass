@@ -14,9 +14,9 @@ void Observer::init() {
 
   // likewise, manually set this for now
   this->currentYear = 2024;
-  this->currentMonth = 8;
-  this->currentDay = 27;
-  this->currentTime = 23.5; // just pretend it's noon UTC
+  this->currentMonth = 11;
+  this->currentDay = 10;
+  this->currentTime = 22; // just pretend it's noon UTC
 }
 
 Horizon Observer::calculatePosition(int objectID) {
@@ -36,8 +36,8 @@ Horizon Observer::calculatePosition(int objectID) {
       break;
     case 3:
       // arcturus, part of the bootes constellation
-      rightAscension = 15 * (5 + (18/60) + (30.1/3600));
-      declination = (46 + (1/60) + (14.3/3600));
+      rightAscension = 214.19333333333;
+      declination = 19.053583333333;
       break;
   }
   // grab the sidereal time

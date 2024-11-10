@@ -6,7 +6,7 @@
 #include "CONFIG.h"
 
 
-Motor::Motor(int pins[]) {
+Motor::Motor(int pins[], float GR) {
     // store intialized pins as local variables
     this->STBY_pin = pins[0];
     this->EN_pin = pins[1];
@@ -15,6 +15,8 @@ Motor::Motor(int pins[]) {
     this->STEP_pin = pins[4]; // also MODE2
     this->DIR_pin = pins[5]; // also MODE3
     this->VREF_pin = pins[6];
+
+    this->gear_ratio = GR;
     init();
 };
 
@@ -42,23 +44,25 @@ void Motor::init() {
     // 3.3V is equal to max current
     float desiredV = (float) 0.6 / (float) 1.1;
 
-    angularVelocity = 10; // the default deg/s that we want to use
+    maxAngularVelocity = 10; // the default deg/s that we want to use
     lastUpdate = millis();
-    currentAngle = 0;
+    currentAngle_real = 0;
+    currentAngle_geared = 0;
     direction = 1; //  default to CCW
 }
 
 float Motor::getAngle() {
-  return currentAngle;
+  return currentAngle_geared;
 }
 
 void Motor::setSpeed(float newSpeed) {
-  this->angularVelocity = newSpeed;
+  this->angularSpeed = newSpeed;
 }
 
 bool Motor::checkAngle() {
   // checks if the current angle is within a step size of the target, useful for while loops and the like
-  return abs(targetAngle-currentAngle) <= (STEP_SIZE * stepResolution);
+  //Serial.println(abs(targetAngle_real-currentAngle_real) <= (STEP_SIZE * stepResolution));
+  return abs(targetAngle_real-currentAngle_real) <= (STEP_SIZE * stepResolution);
 }
 
 void Motor::setAngle(float angle) {
@@ -69,7 +73,8 @@ void Motor::setAngle(float angle) {
   while(angle > 360) {
     angle -= 360;
   }
-  this->targetAngle = angle;
+  this->targetAngle_real = angle;
+  this->targetAngle_geared = angle * gear_ratio;
 }
 
 void Motor::setDirection(bool direction) {
@@ -78,7 +83,7 @@ void Motor::setDirection(bool direction) {
 
 void Motor::update() {
   // first, let's make sure we're already at our angle, or at least within a single step of it
-  if(abs(targetAngle-currentAngle) >= (STEP_SIZE * stepResolution)) {
+  if(abs(targetAngle_real-currentAngle_real) >= (STEP_SIZE * stepResolution)) {
     enable(1);
     // we'll define positive angles as positive from the right hand rule. So if the target is
     // 15 deg and we're at 0 deg, rotate the motor CCW
@@ -87,7 +92,7 @@ void Motor::update() {
     // an update and we also have the deg/s that's desired.
 
     // so the first thing we do when updating is make sure we *should* be updating
-    float millisecsToStep = ((STEP_SIZE * stepResolution)/angularVelocity) * 1000;
+    float millisecsToStep = ((STEP_SIZE * stepResolution)/(maxAngularVelocity * angularSpeed)) * 1000;
     if(millis()-lastUpdate >= millisecsToStep) {
       // reset the timer
       lastUpdate = millis();
@@ -100,10 +105,12 @@ void Motor::update() {
         digitalWrite(STEP_pin, HIGH);
         digitalWrite(STEP_pin, LOW);
 
-        currentAngle += STEP_SIZE * stepResolution;
-        if(currentAngle >= 360) {
-          currentAngle -= 360;
+        currentAngle_real += STEP_SIZE * stepResolution;
+        if(currentAngle_real >= 360 * gear_ratio) {
+          currentAngle_real -= 360 * gear_ratio;
         }
+
+        currentAngle_geared = currentAngle_real * gear_ratio;
       } else {
         // rotate CW
         digitalWrite(DIR_pin, LOW);
@@ -112,10 +119,12 @@ void Motor::update() {
         digitalWrite(STEP_pin, HIGH);
         digitalWrite(STEP_pin, LOW);
 
-        currentAngle -= STEP_SIZE * stepResolution;
-        if(currentAngle < 0) {
-          currentAngle += 360;
+        currentAngle_real -= STEP_SIZE * stepResolution;
+        if(currentAngle_real < 0) {
+          currentAngle_real += 360*gear_ratio;
         }
+
+        currentAngle_geared = currentAngle_real * gear_ratio;
       }
     }
   } else {
