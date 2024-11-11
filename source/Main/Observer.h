@@ -15,6 +15,11 @@ struct Horizon {
   float altitude;
 };
 
+struct RADEC {
+  float RightAscension;
+  float Declination;
+};
+
 class Observer {
   private:
     // current position of the observer
@@ -31,8 +36,15 @@ class Observer {
     Observer(); // constructor for the observer
     void init(); // initializes the observer
 
+    float cosd(float deg); // literally just a degrees based cosine function
+    float sind(float deg); // same here
+
     Horizon calculatePosition(int objectID); // calculates the azimuth and altitude of a given object
-    float siderealTime(); // calculates sidereal time from the current 
+
+    // functions for celestial math
+    long julianDate(); // 
+    float siderealTime(); // calculates sidereal time from the current date and time
+    RADEC KeplerianObject(float kepElms[]); // finds the RA and DEC of an object given the required keplerian elements
 
 };
 #endif
