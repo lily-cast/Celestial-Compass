@@ -44,7 +44,7 @@ class Observer {
     // functions for celestial math
     long julianDate(); // 
     float siderealTime(); // calculates sidereal time from the current date and time
-    RADEC KeplerianObject(float kepElms[]); // finds the RA and DEC of an object given the required keplerian elements
+    RADEC KeplerianObject(double kepElms[]); // finds the RA and DEC of an object given the required keplerian elements
 
 };
 #endif
