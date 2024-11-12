@@ -14,6 +14,7 @@ Observer Observer1;
 //Motor test1R(pins_1R);
 void setup() {
   Serial.begin(115200);
+  Serial.println("hello!");
   Observer1.calculatePosition(10);
 }
 

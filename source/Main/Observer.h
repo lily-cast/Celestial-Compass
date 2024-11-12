@@ -8,6 +8,7 @@
 #define OBSERVER_H
 
 #include <Arduino.h>
+#include <SiderealPlanets.h>
 
 // define a struct to store and send azimuth and altitude coordinates
 struct Horizon {
@@ -18,6 +19,12 @@ struct Horizon {
 struct RADEC {
   float RightAscension;
   float Declination;
+};
+
+struct Cartesian {
+  double x;
+  double y;
+  double z;
 };
 
 class Observer {
@@ -32,6 +39,8 @@ class Observer {
     int currentMonth; // 1-12
     int currentYear;
 
+    SiderealPlanets PlanetCalc; // sidereal planet calculator
+
   public:
     Observer(); // constructor for the observer
     void init(); // initializes the observer
@@ -44,7 +53,12 @@ class Observer {
     // functions for celestial math
     long julianDate(); // 
     float siderealTime(); // calculates sidereal time from the current date and time
-    RADEC KeplerianObject(double kepElms[]); // finds the RA and DEC of an object given the required keplerian elements
+
+    Cartesian KeplerianHeliocentric(double kepElms[]); // finds the cartesian coordinates of a heliocentric object given the required keplerian elements
+    Cartesian KeplerianGeocentric(double kepElms[]); // finds the cartesian coordinates of a geocentric object
+    RADEC Car_to_RADEC(Cartesian coordinates); // converts geocentric cartesian coordinates to right ascension and declination
+
+    Horizon AzimuthAltitude(RADEC coords); // takes right ascension and declination of an object on the celestial sphere and turns it into azimuth and altitude coordinates
 
 };
 #endif

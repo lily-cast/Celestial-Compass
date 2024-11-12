@@ -2,7 +2,7 @@
 #include "CONFIG.h"
 
 Observer::Observer() {
-
+  PlanetCalc.begin();
   init();
 }
 
@@ -17,43 +17,63 @@ void Observer::init() {
   this->currentYear = 2024;
   this->currentMonth = 11;
   this->currentDay = 12;
-  this->currentTime = 1.25; // just pretend it's noon UTC
+  this->currentTime = 19.5; // just pretend it's noon UTC
+
+  PlanetCalc.setGMTdate(currentYear, currentMonth, currentDay);
+  PlanetCalc.setGMTtime(19, 30, 0);
 }
 
 Horizon Observer::calculatePosition(int objectID) {
   // TODO: create lookup table for object IDs and their RA and DEC
-  float rightAscension;
-  float declination;
+  struct RADEC coordinates;
 
+  double earth_kep[16] = {1.00000261, 0.01671123, -0.00001531, 100.46457166, 102.93768193, 0.0,
+                          0.00000562, -0.00004392, -0.01294668, 35999.37244981, 0.32327364, 0.0,
+                          0, 0, 0, 0};
   if(objectID == 10) {
-    // find mars!
-    double mars[16] = {1.52371034, 0.09339410, 1.84969142, -4.55343205, -23.94362959, 49.55953891, 
-                      0.00001847, 0.00007882, -0.00813131, 19140.30268499, 0.44441088, -0.29257343, 
-                      0, 0, 0, 0};
-    struct RADEC coords = KeplerianObject(mars);
-    rightAscension = coords.RightAscension;
-    declination = coords.Declination;
+    PlanetCalc.doMoon();
+    double ra = PlanetCalc.getRAdec() * float(15);
+    coordinates.RightAscension = ra;
+
+    double dec = PlanetCalc.getDeclinationDec();
+    coordinates.Declination = dec;
+
+    Serial.print("Right ascension: ");
+    Serial.println(coordinates.RightAscension, 10);
+
+    Serial.print("Declination: ");
+    Serial.println(coordinates.Declination, 10);
+
+    Serial.println(PlanetCalc.getMoonPhase());
   } else {
 
 
     switch(objectID) {
       case 0:
         // for now this will be Polaris
-        rightAscension = 15 * (2 + (31/60) + (49.09/3600));
-        declination = (89 + (15/60) + (50.08/3600));
+        coordinates.RightAscension = 15 * (2 + (31/60) + (49.09/3600));
+        coordinates.Declination = (89 + (15/60) + (50.08/3600));
         break;
       case 1:
         // assume this is ursa major
-        rightAscension = 15 * (10 + (40/60) + (0/3600));
-        declination = (56 + (0/60) + (0/3600));
+        coordinates.RightAscension = 15 * (10 + (40/60) + (0/3600));
+        coordinates.Declination = (56 + (0/60) + (0/3600));
         break;
       case 3:
         // arcturus, part of the bootes constellation
-        rightAscension = 214.19333333333;
-        declination = 19.053583333333;
+        coordinates.RightAscension = 214.19333333333;
+        coordinates.Declination = 19.053583333333;
         break;
     }
   }
+  return AzimuthAltitude(coordinates);
+
+}
+
+Horizon Observer::AzimuthAltitude(RADEC coords) {
+  double rightAscension = coords.RightAscension;
+  double declination = coords.Declination;
+
   // grab the sidereal time
   float LST = siderealTime();
   Serial.println("LST: " + String(LST));
@@ -89,7 +109,9 @@ Horizon Observer::calculatePosition(int objectID) {
   return coordinates;
 }
 
-RADEC Observer::KeplerianObject(double kepElms[]) {
+Cartesian Observer::KeplerianHeliocentric(double kepElms[]) {
+  // this currently doesn't work! so we'll actually use a different method to calculate the planets and moon
+
   // the keplerian elements required to calculate position are stored in the array as follows
   // a0 :: semi-major axis (au)
   // e0 :: eccentricity (unitless)
@@ -141,8 +163,6 @@ RADEC Observer::KeplerianObject(double kepElms[]) {
   double D_tt = (T + (currentTime/(float)24)) - 2451545;
 
   T = D_tt / (float)36525;
-
-  Serial.println(T, 20);
   // using the julian dates, calculate the current value of our keplerian elements
   double a = a0 + aDot*T;
   double e = e0 + eDot*T;
@@ -151,9 +171,16 @@ RADEC Observer::KeplerianObject(double kepElms[]) {
   double w = w0 + wDot*T;
   double o = o0 + oDot*T;
 
+  while(L < 0){L += 360;}
+  while(L > 360){L -=360;}
+  
+
   double e_star = e * DEG_over_RAD;
   // nice, now let's go ahead and comput the argument of perihelion (AOPh)
   double AOPh = w - o;
+
+  while(AOPh < 0){AOPh += 360;}
+  while(AOPh > 360){AOPh -=360;}
 
   // also compute the mean anomaly (M)
   double M = L - w + b*(T*T) + c*cosd(f*T)+ s*sind(f*T);
@@ -224,22 +251,17 @@ RADEC Observer::KeplerianObject(double kepElms[]) {
   double y_eq = cosd(obliq)*y_ecl - sind(obliq)*z_ecl;
   double z_eq = sind(obliq)*y_ecl - cosd(obliq)*z_ecl;
 
-  // from here, we can finally convert to a right ascension and declination
-  double r_eq = sqrt((x_eq*x_eq) + (y_eq*y_eq) + (z_eq*z_eq)); // magnitude of the vector
-
-  double dec = asin(z_eq / r_eq) * DEG_over_RAD; // yay!
-  double ra = asin(y_eq/ (r_eq*cosd(dec)) ) * DEG_over_RAD;
-
-  struct RADEC coords;
-  coords.Declination = dec;
-  coords.RightAscension = ra;
-
-  Serial.println("Right ascension: " + String(ra));
-  Serial.println("Declination: " + String(dec));
-
-  Serial.println("x: " + String(x_ecl));
-  Serial.println("y: " + String(y_ecl));
-  Serial.println("z: " + String(z_ecl));
+  // store those variables and send them out!
+  struct Cartesian heliocentricCoords;
+  heliocentricCoords.x = x_eq;
+  heliocentricCoords.y = y_eq;
+  heliocentricCoords.z = z_eq;
+ 
+  // Debug stuff
+  Serial.println("------ Planetary Coordinates ------");
+  Serial.println("x: " + String(x_eq));
+  Serial.println("y: " + String(y_eq));
+  Serial.println("z: " + String(z_eq));
 
   Serial.println("Mean anomaly: " + String(M));
   Serial.println("Eccentric anomaly: " + String(EccAnom));
@@ -252,8 +274,10 @@ RADEC Observer::KeplerianObject(double kepElms[]) {
   Serial.println("LAN: " + String(o));
 
   Serial.println("Argument of Perihelion: " + String(AOPh));
- 
-  return coords;
+
+  Serial.println("----------------------------------");
+
+  return heliocentricCoords;
 }
 
 float Observer::siderealTime() {
@@ -303,6 +327,23 @@ long Observer::julianDate() {
   B = 2 - A + A/4;
   long currentJD = (365.25 * (localYear + 4716)) + (30.6001 * (localMonth + 1)) +  currentDay + B - 1524;
   return currentJD;
+}
+
+RADEC Observer::Car_to_RADEC(Cartesian Coords) {
+  // from here, we can finally convert to a right ascension and declination
+  double x = Coords.x;
+  double y = Coords.y;
+  double z = Coords.z;
+
+  double r = sqrt((x*x) + (y*y) + (z*z)); // magnitude of the vector
+
+  double dec = asin(z / r) * DEG_over_RAD; // yay!
+  double ra = asin(y/ (r*cosd(dec)) ) * DEG_over_RAD;
+
+  struct RADEC outputCoords;
+  outputCoords.Declination = dec;
+  outputCoords.RightAscension = ra;
+  return outputCoords;
 }
 
 float Observer::cosd(float deg) {
