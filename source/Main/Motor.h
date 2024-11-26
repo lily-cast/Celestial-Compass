@@ -10,14 +10,9 @@
 class Motor {
   private:
     // pin definitions for physical connection to driver
-    int STBY_pin;
     int EN_pin;
-    int MODE0_pin;
-    int MODE1_pin;
     int STEP_pin; // aka MODE2
     int DIR_pin; // aka MODE3
-    int ERR_pin;
-    int VREF_pin;
 
     float gear_ratio;
 

@@ -8,13 +8,9 @@
 
 Motor::Motor(int pins[], float GR) {
     // store intialized pins as local variables
-    this->STBY_pin = pins[0];
-    this->EN_pin = pins[1];
-    this->MODE0_pin = pins[2];
-    this->MODE1_pin = pins[3];
-    this->STEP_pin = pins[4]; // also MODE2
-    this->DIR_pin = pins[5]; // also MODE3
-    this->VREF_pin = pins[6];
+    this->EN_pin = pins[0];
+    this->STEP_pin = pins[1]; 
+    this->DIR_pin = pins[2];
 
     this->gear_ratio = GR;
     init();
@@ -22,33 +18,16 @@ Motor::Motor(int pins[], float GR) {
 
 void Motor::init() {
     // set the output mode of all the motor pins
-    pinMode(STBY_pin, OUTPUT);
     pinMode(EN_pin, OUTPUT);
-    pinMode(MODE0_pin, OUTPUT);
-    pinMode(MODE1_pin, OUTPUT);
     pinMode(STEP_pin, OUTPUT);
     pinMode(DIR_pin, OUTPUT);
-    //pinMode(VREF_pin, OUTPUT);
-
-    // make sure we're in standby
-    digitalWrite(STBY_pin, LOW);
-
-    // set the step resolution to 1/32
-    setStepResolution(8);
-
-    // now we release standby and enable the motor to get the motor going
-    digitalWrite(STBY_pin, HIGH);
-    enable(true);
-
-    // start with a .6 A limit on the motor
-    // 3.3V is equal to max current
-    float desiredV = (float) 0.6 / (float) 1.1;
 
     maxAngularVelocity = 10; // the default deg/s that we want to use
     lastUpdate = millis();
     currentAngle_real = 0;
     currentAngle_geared = 0;
     direction = 1; //  default to CCW
+    stepResolution = 1;
 }
 
 float Motor::getAngle() {
@@ -56,13 +35,17 @@ float Motor::getAngle() {
 }
 
 void Motor::setSpeed(float newSpeed) {
+  // for some weird reason using abs() when setting the speed causes it to come out as 0.. so lets just check for negatives here instead
+  if(newSpeed < 0) {
+    newSpeed = float(-1) * newSpeed;
+  }
   this->angularSpeed = newSpeed;
 }
 
 bool Motor::checkAngle() {
   // checks if the current angle is within a step size of the target, useful for while loops and the like
   //Serial.println(abs(targetAngle_real-currentAngle_real) <= (STEP_SIZE * stepResolution));
-  return abs(targetAngle_real-currentAngle_real) <= (STEP_SIZE * stepResolution);
+  return abs(targetAngle_geared-currentAngle_geared) <= (STEP_SIZE * stepResolution);
 }
 
 void Motor::setAngle(float angle) {
@@ -73,8 +56,8 @@ void Motor::setAngle(float angle) {
   while(angle > 360) {
     angle -= 360;
   }
-  this->targetAngle_real = angle;
-  this->targetAngle_geared = angle * gear_ratio;
+  this->targetAngle_geared = angle;
+  this->targetAngle_real = angle * gear_ratio;
 }
 
 void Motor::setDirection(bool direction) {
@@ -83,8 +66,7 @@ void Motor::setDirection(bool direction) {
 
 void Motor::update() {
   // first, let's make sure we're already at our angle, or at least within a single step of it
-  if(abs(targetAngle_real-currentAngle_real) >= (STEP_SIZE * stepResolution)) {
-    enable(1);
+  if(abs(targetAngle_real-currentAngle_real) >= (STEP_SIZE)) {
     // we'll define positive angles as positive from the right hand rule. So if the target is
     // 15 deg and we're at 0 deg, rotate the motor CCW
   
@@ -92,8 +74,9 @@ void Motor::update() {
     // an update and we also have the deg/s that's desired.
 
     // so the first thing we do when updating is make sure we *should* be updating
-    float millisecsToStep = ((STEP_SIZE * stepResolution)/(maxAngularVelocity * angularSpeed)) * 1000;
+    float millisecsToStep = ((STEP_SIZE / gear_ratio)/(maxAngularVelocity * angularSpeed)) * 1000;
     if(millis()-lastUpdate >= millisecsToStep) {
+      enable(1);
       // reset the timer
       lastUpdate = millis();
       // now we check what direction to go
@@ -105,12 +88,12 @@ void Motor::update() {
         digitalWrite(STEP_pin, HIGH);
         digitalWrite(STEP_pin, LOW);
 
-        currentAngle_real += STEP_SIZE * stepResolution;
+        currentAngle_real += STEP_SIZE;
         if(currentAngle_real >= 360 * gear_ratio) {
           currentAngle_real -= 360 * gear_ratio;
         }
 
-        currentAngle_geared = currentAngle_real * gear_ratio;
+        currentAngle_geared = currentAngle_real / gear_ratio;
       } else {
         // rotate CW
         digitalWrite(DIR_pin, LOW);
@@ -119,13 +102,17 @@ void Motor::update() {
         digitalWrite(STEP_pin, HIGH);
         digitalWrite(STEP_pin, LOW);
 
-        currentAngle_real -= STEP_SIZE * stepResolution;
+        currentAngle_real -= STEP_SIZE;
         if(currentAngle_real < 0) {
           currentAngle_real += 360*gear_ratio;
         }
 
-        currentAngle_geared = currentAngle_real * gear_ratio;
+        currentAngle_geared = currentAngle_real / gear_ratio;
       }
+      enable(0);
+      Serial.print("Step percent: ");
+      Serial.print((100.0*currentAngle_geared)/targetAngle_geared, 2);
+      Serial.println("%");
     }
   } else {
     enable(0);
@@ -134,98 +121,4 @@ void Motor::update() {
 
 void Motor::enable(bool onoff) {
   digitalWrite(EN_pin, onoff);
-}
-
-void Motor::setStepResolution(int res) {
-  // TODO: store pin inputs in an array and only call digital write outside of the switch case
-
-  // runs the motor through the standby on/off process, resetting the step size in the proccess
-  // first, turn on stanby mode
-
-  digitalWrite(STBY_pin, LOW); // this is active on the low
-
-  // next, run through each case of what resolutions we can do
-  switch(res) {
-    case 1: 
-      // H, L, L, L
-      digitalWrite(DIR_pin, HIGH);
-      digitalWrite(STEP_pin, LOW);
-      digitalWrite(MODE1_pin, LOW);
-      digitalWrite(MODE0_pin, LOW);
-      break;
-
-    case 2:
-      // H, L, L, H
-      digitalWrite(DIR_pin, HIGH);
-      digitalWrite(STEP_pin, LOW);
-      digitalWrite(MODE1_pin, LOW);
-      digitalWrite(MODE0_pin, HIGH);
-      break;
-
-    case 4:
-      // H, L, H, L
-      digitalWrite(DIR_pin, HIGH);
-      digitalWrite(STEP_pin, LOW);
-      digitalWrite(MODE1_pin, HIGH);
-      digitalWrite(MODE0_pin, LOW);
-      break;
-
-    case 8:
-      // H, L, H, H
-      digitalWrite(DIR_pin, HIGH);
-      digitalWrite(STEP_pin, LOW);
-      digitalWrite(MODE1_pin, HIGH);
-      digitalWrite(MODE0_pin, HIGH);
-      break;
-
-    case 16:
-      // H, H, L, L
-      digitalWrite(DIR_pin, HIGH);
-      digitalWrite(STEP_pin, HIGH);
-      digitalWrite(MODE1_pin, LOW);
-      digitalWrite(MODE0_pin, LOW);
-      break;
-      
-    case 32:
-      // H, H, L, H
-      digitalWrite(DIR_pin, HIGH);
-      digitalWrite(STEP_pin, HIGH);
-      digitalWrite(MODE1_pin, LOW);
-      digitalWrite(MODE0_pin, HIGH);
-      break;
-
-    case 64:
-      // H, H, H, L
-      digitalWrite(DIR_pin, HIGH);
-      digitalWrite(STEP_pin, HIGH);
-      digitalWrite(MODE1_pin, HIGH);
-      digitalWrite(MODE0_pin, LOW);
-      break;
-
-    case 128:
-      // H, H, H, H
-      digitalWrite(DIR_pin, HIGH);
-      digitalWrite(STEP_pin, HIGH);
-      digitalWrite(MODE1_pin, HIGH);
-      digitalWrite(MODE0_pin, HIGH);
-      break;
-
-    default:
-      // just do full step resolution
-      // H, L, L, L
-      digitalWrite(DIR_pin, HIGH);
-      digitalWrite(STEP_pin, LOW);
-      digitalWrite(MODE1_pin, LOW);
-      digitalWrite(MODE0_pin, LOW);
-      
-      // forcibly set the res variable to 1, for use when calculating step size
-      res = 1;
-      break;
-  }
-  // disable standby
-  digitalWrite(STBY_pin, HIGH);
-
-  // reset the step size variable based on the provided resolution
-  // reset step resolution variable
-      stepResolution = ((float)1/(float)res);
 }

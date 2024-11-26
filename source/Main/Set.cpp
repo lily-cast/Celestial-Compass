@@ -13,7 +13,7 @@ Set::Set(int pinsP[], int pinsR[], float gr_motor_P, float gr_motor_R, float gr_
 void Set::init() {
   // set our default parameters
   this->updateFreq = 5 * 1000; // update the object loccation once every 5 seconds
-  this->maxSpeed = 10; // max speed in deg/sec
+  this->maxSpeed = 1; // max speed in deg/sec
   this->targetAzi = 0;
   this->targetAlt = 0;
   this->lastUpdate = millis();
@@ -28,7 +28,7 @@ void Set::update() {
     calculateAzAlt();
   }
   // finally, update the motors
-  mR.update();
+  //mR.update();
   mP.update();
 }
 
@@ -118,10 +118,10 @@ void Set::setAzAlt(float Az, float Alt) {
   if(deltaR != 0 && deltaP != 0) {
     if(abs(deltaR) > abs(deltaP)) {
       mR.setSpeed(1);
-      mP.setSpeed(abs(deltaP) / abs(deltaR));
+      mP.setSpeed(deltaP / deltaR);
     } else {
       mP.setSpeed(1);
-      mR.setSpeed(abs(deltaR) / abs(deltaP));
+      mR.setSpeed(deltaR / deltaP);
     }
   } else if(deltaR == 0) {
     mP.setSpeed(1);

@@ -5,17 +5,24 @@
 // motor definitions
 
 // pin order is:
-// stby, en, mode0, mode1, step, dir
-int pins_1P[7] = {4, 9, 7, 8, 3, 2, A4}; // green wires
-int pins_1R[7] = {15, 21, 19, 20, 14, 16, A3}; // blue wires
+// EN, STEP, DIR
+int pins_1R[3] = {4,3,2}; // green tape
+int pins_1P[3] = {7,6,5}; // yellow tape
 
-Set Set1(pins_1P, pins_1R, 1,1,3);
+Set Set1(pins_1P, pins_1R, 32,32,3);
 Observer Observer1;
-//Motor test1R(pins_1R);
 void setup() {
   Serial.begin(115200);
   Serial.println("hello!");
   Observer1.calculatePosition(10);
+
+  Set1.setAzAlt(179, 17);
+
+  
+  while(!Set1.checkMotors()) {
+    Set1.update();
+  }
+  Serial.println("Done!");
 }
 
 void loop() {
