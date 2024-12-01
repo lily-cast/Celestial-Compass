@@ -9,16 +9,16 @@
 
 #include <Arduino.h>
 #include <SiderealPlanets.h>
-
-// define a struct to store and send azimuth and altitude coordinates
-struct Horizon {
-  float azimuth;
-  float altitude;
-};
+//#include "Catalog.h"
 
 struct RADEC {
   float RightAscension;
   float Declination;
+};
+
+struct Horizon {
+  float azimuth;
+  float altitude;
 };
 
 struct Cartesian {
@@ -38,6 +38,7 @@ class Observer {
     int currentDay; // 1-31
     int currentMonth; // 1-12
     int currentYear;
+    
 
     SiderealPlanets PlanetCalc; // sidereal planet calculator
 
@@ -59,6 +60,9 @@ class Observer {
     RADEC Car_to_RADEC(Cartesian coordinates); // converts geocentric cartesian coordinates to right ascension and declination
 
     Horizon AzimuthAltitude(RADEC coords); // takes right ascension and declination of an object on the celestial sphere and turns it into azimuth and altitude coordinates
+
+    RADEC objectLookup(int objectID);
+    String objectName(int objectID);
 
 };
 #endif

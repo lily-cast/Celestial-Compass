@@ -8,6 +8,7 @@
 
 #include <Arduino.h>
 #include "Motor.h"
+#include "Observer.h"
 
 class Set {
   private:
@@ -19,7 +20,7 @@ class Set {
     Motor mR; // motor object for the R gear
 
     // information about the object tracking
-    int objectID; // ID of the object current being tracked
+
     float updateFreq; // rate at which the location of the tracked object is updated
     float currentAzi; // current azimuth
     float cuurentAlt; // current altitude
@@ -37,11 +38,19 @@ class Set {
     void init();
     void update(); // updates the position of the motors and tracking of object
     void trackObject(int ID); // tells the Set which object ID to track
-    void setAzAlt(float Az, float Alt); // forcibly sets the azimuth and alititude, will most likely be removed later
+    void setAzAlt(Horizon AzAlt); // forcibly sets the azimuth and alititude, will most likely be removed later
     bool checkMotors(); // checks if motors are in place
     void setStepResolution(int res); // sets both motors to the desired resolution
 
     void Set::calculateAzAlt(); // calculates azimuth and altitude
+    void Set::setObserver(Observer newObserver);
+
+
+    int bankSelection; // the index (starting at 0) of the object being tracked in objectBank
+    int objectID; // ID of the object current being tracked
+    int objectBank[5]; // an array of object IDs that can be incremented up and down
+
+    Observer* objectObserver; // keeps track of objects
 };
 
 #endif

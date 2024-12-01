@@ -4,6 +4,7 @@
 
 #include "Motor.h"
 #include "CONFIG.h"
+#include "Observer.h"
 
 
 Motor::Motor(int pins[], float GR) {
@@ -22,7 +23,7 @@ void Motor::init() {
     pinMode(STEP_pin, OUTPUT);
     pinMode(DIR_pin, OUTPUT);
 
-    maxAngularVelocity = 10; // the default deg/s that we want to use
+    maxAngularVelocity = 50; // the default deg/s that we want to use
     lastUpdate = millis();
     currentAngle_real = 0;
     currentAngle_geared = 0;
@@ -110,9 +111,9 @@ void Motor::update() {
         currentAngle_geared = currentAngle_real / gear_ratio;
       }
       enable(0);
-      Serial.print("Step percent: ");
-      Serial.print((100.0*currentAngle_geared)/targetAngle_geared, 2);
-      Serial.println("%");
+      //Serial.print("Step percent: ");
+      //Serial.print((100.0*currentAngle_geared)/targetAngle_geared, 2);
+      //Serial.println("%");
     }
   } else {
     enable(0);

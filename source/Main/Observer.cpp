@@ -1,6 +1,18 @@
 #include "Observer.h"
 #include "CONFIG.h"
 
+float RADECtable[3][2] = {
+  {214.1933333,19.05358333},
+  {37.95454167,89.26391111},
+  {160,56}
+};
+
+String nameTable[3] = {
+  "Arcturus",
+  "Polaris",
+  "Ursa Major"
+};
+
 Observer::Observer() {
   PlanetCalc.begin();
   init();
@@ -16,58 +28,23 @@ void Observer::init() {
   // likewise, manually set this for now
   this->currentYear = 2024;
   this->currentMonth = 11;
-  this->currentDay = 12;
-  this->currentTime = 19.5; // just pretend it's noon UTC
+  this->currentDay = 27;
+  this->currentTime = 20.5; // just pretend it's noon UTC
 
   PlanetCalc.setGMTdate(currentYear, currentMonth, currentDay);
-  PlanetCalc.setGMTtime(19, 30, 0);
+  PlanetCalc.setGMTtime(20, 30, 0);
+  PlanetCalc.setLatLong(latitude, longitude);
+  PlanetCalc.getGMT();
 }
 
 Horizon Observer::calculatePosition(int objectID) {
   // TODO: create lookup table for object IDs and their RA and DEC
-  struct RADEC coordinates;
-
-  double earth_kep[16] = {1.00000261, 0.01671123, -0.00001531, 100.46457166, 102.93768193, 0.0,
-                          0.00000562, -0.00004392, -0.01294668, 35999.37244981, 0.32327364, 0.0,
-                          0, 0, 0, 0};
-  if(objectID == 10) {
-    PlanetCalc.doMoon();
-    double ra = PlanetCalc.getRAdec() * float(15);
-    coordinates.RightAscension = ra;
-
-    double dec = PlanetCalc.getDeclinationDec();
-    coordinates.Declination = dec;
-
-    Serial.print("Right ascension: ");
-    Serial.println(coordinates.RightAscension, 10);
-
-    Serial.print("Declination: ");
-    Serial.println(coordinates.Declination, 10);
-
-    Serial.println(PlanetCalc.getMoonPhase());
-  } else {
-
-
-    switch(objectID) {
-      case 0:
-        // for now this will be Polaris
-        coordinates.RightAscension = 15 * (2 + (31/60) + (49.09/3600));
-        coordinates.Declination = (89 + (15/60) + (50.08/3600));
-        break;
-      case 1:
-        // assume this is ursa major
-        coordinates.RightAscension = 15 * (10 + (40/60) + (0/3600));
-        coordinates.Declination = (56 + (0/60) + (0/3600));
-        break;
-      case 3:
-        // arcturus, part of the bootes constellation
-        coordinates.RightAscension = 214.19333333333;
-        coordinates.Declination = 19.053583333333;
-        break;
-    }
-  }
+  Serial.println();
+  Serial.print("Calculating position: ");
+  String name = objectName(objectID);
+  Serial.println(name);
+  struct RADEC coordinates = objectLookup(objectID);
   return AzimuthAltitude(coordinates);
-
 }
 
 Horizon Observer::AzimuthAltitude(RADEC coords) {
@@ -76,7 +53,7 @@ Horizon Observer::AzimuthAltitude(RADEC coords) {
 
   // grab the sidereal time
   float LST = siderealTime();
-  Serial.println("LST: " + String(LST));
+  //Serial.println("LST: " + String(LST));
 
   // convert RA to Hour Angle
   float HA = LST*15 - rightAscension;
@@ -287,7 +264,7 @@ float Observer::siderealTime() {
   long currentJD = julianDate();
 
   // TESTING //
-  Serial.println("Current JD: " + String(currentJD));
+  //Serial.println("Current JD: " + String(currentJD));
 
   //float LST = 100.4606184 + (0.985647 * currentJD) + longitude + (15*currentTime);
 
@@ -302,7 +279,7 @@ float Observer::siderealTime() {
 
   GMST = ((int)floor(GMST) % 24) + GMST_decimals;
 
-  Serial.println("GMST: " + String(GMST));
+  //Serial.println("GMST: " + String(GMST));
   float LST = GMST + longitude/(float)15;
 
   // keep this within 360
@@ -352,4 +329,54 @@ float Observer::cosd(float deg) {
 
 float Observer::sind(float deg) {
   return sin(deg / DEG_over_RAD);
+}
+
+RADEC Observer::objectLookup(int objectID) {
+  struct RADEC objectCoords;
+  if (objectID >= 1000 && objectID < 2000) {
+    switch(objectID-1000) {
+      case 1000:
+        PlanetCalc.doSun();
+        break;
+      /*case 1001:
+        PlanetCalc.doMercury();
+        break;
+      case 1002:
+        PlanetCalc.doVenus();
+        break;*/
+      case 1003:
+        PlanetCalc.doMoon();
+        break;
+      /*case 1004:
+        PlanetCalc.doMars();
+        break;
+      case 1005:
+        PlanetCalc.doJupiter();
+        break;
+      case 1006:
+        PlanetCalc.doSaturn();
+        break;
+      case 1007:
+        PlanetCalc.doUranus();
+        break;
+      case 1008:
+        PlanetCalc.doNeptune();
+        break;*/
+    }
+    objectCoords.RightAscension = PlanetCalc.getRAdec() * 15.0;
+    objectCoords.Declination = PlanetCalc.getDeclinationDec();
+  } else {
+    objectCoords.RightAscension = RADECtable[objectID-2000][0];
+    objectCoords.Declination = RADECtable[objectID-2000][1];
+  }
+
+  return objectCoords;
+}
+
+String Observer::objectName(int objectID) {
+  if(objectID >= 1000 && objectID < 2000) {
+    return "planet";
+  } else {
+    return nameTable[(objectID-2000)];
+  }
 }

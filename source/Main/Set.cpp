@@ -1,12 +1,12 @@
 #include "CONFIG.h"
 #include "Motor.h"
 #include "Set.h"
+#include "Observer.h"
 
 Set::Set(int pinsP[], int pinsR[], float gr_motor_P, float gr_motor_R, float gr_R_Alt)
     : mR(pinsR, gr_motor_R), mP(pinsP, gr_motor_P) {
   // needs to be given the pins for each motor to correctly work, start by setting those up
   this->gr_R_Alt = gr_R_Alt;
-
   init();
 }
 
@@ -26,16 +26,24 @@ void Set::update() {
   if(millis() >= lastUpdate + updateFreq) {
     // check the location of the object
     calculateAzAlt();
+    lastUpdate = millis();
   }
   // finally, update the motors
-  //mR.update();
+  mR.update();
   mP.update();
 }
 
-void Set::setAzAlt(float Az, float Alt) {
+void Set::setAzAlt(Horizon AzAlt) {
   // changes the azimuth and altitude while giving the motors new commands
+  float Az = AzAlt.azimuth;
+  float Alt = AzAlt.altitude;
+
+  Alt = max(0, Alt);
+
   this->targetAzi = Az;
   this->targetAlt = Alt;
+
+  
 
   // first, get the current location of the P and R motor
   currentP = mP.getAngle();
@@ -140,6 +148,15 @@ void Set::setStepResolution(int res) {
 }
 
 void Set::calculateAzAlt() {
-  // get the current time
-  // TEST //
+  struct Horizon newCoords = (*objectObserver).calculatePosition(objectID);
+  setAzAlt(newCoords);
+}
+
+void Set::trackObject(int ID) {
+  this->objectID = ID;
+  calculateAzAlt();
+}
+
+void Set::setObserver(Observer newObserver) {
+  this->objectObserver = &newObserver;
 }
