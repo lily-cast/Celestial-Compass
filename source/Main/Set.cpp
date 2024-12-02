@@ -3,6 +3,8 @@
 #include "Set.h"
 #include "Observer.h"
 
+int objectBank[5] = {0,0,0,0,0};
+
 Set::Set(int pinsP[], int pinsR[], float gr_motor_P, float gr_motor_R, float gr_R_Alt)
     : mR(pinsR, gr_motor_R), mP(pinsP, gr_motor_P) {
   // needs to be given the pins for each motor to correctly work, start by setting those up

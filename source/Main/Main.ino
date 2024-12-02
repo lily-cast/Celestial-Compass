@@ -25,7 +25,7 @@ void setup() {
   }
   delay(1000);
 
-  Set1.trackObject(1001);
+  Set1.trackObject(1003);
   while(!Set1.checkMotors()) {
     Set1.update();
   }

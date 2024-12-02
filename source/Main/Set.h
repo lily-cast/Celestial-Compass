@@ -46,8 +46,8 @@ class Set {
     void Set::setObserver(Observer newObserver);
 
 
-    int bankSelection; // the index (starting at 0) of the object being tracked in objectBank
     int objectID; // ID of the object current being tracked
+    int bankSelection; // the index (starting at 0) of the object being tracked in objectBank
     int objectBank[5]; // an array of object IDs that can be incremented up and down
 
     Observer* objectObserver; // keeps track of objects

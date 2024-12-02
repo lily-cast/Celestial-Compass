@@ -334,7 +334,7 @@ float Observer::sind(float deg) {
 RADEC Observer::objectLookup(int objectID) {
   struct RADEC objectCoords;
   if (objectID >= 1000 && objectID < 2000) {
-    switch(objectID-1000) {
+    switch(objectID) {
       case 1000:
         PlanetCalc.doSun();
         break;
