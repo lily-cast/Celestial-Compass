@@ -375,7 +375,35 @@ RADEC Observer::objectLookup(int objectID) {
 
 String Observer::objectName(int objectID) {
   if(objectID >= 1000 && objectID < 2000) {
-    return "planet";
+    switch(objectID) {
+      case 1000:
+          return "Sun";
+          break;
+      case 1001:
+        return "Mercury"; 
+        break;
+      case 1002:
+        return "Venus";
+        break;
+      case 1003:
+        return "Moon";
+        break;
+      case 1004:
+        return "Mars";
+        break;
+      case 1005:
+        return "Jupiter";
+        break;
+      case 1006:
+        return "Saturn";
+        break;
+      case 1007:
+        return "Uranus";
+        break;
+      case 1008:
+        return "Neptune";
+        break;
+    }
   } else {
     return nameTable[(objectID-2000)];
   }

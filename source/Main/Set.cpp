@@ -4,11 +4,15 @@
 #include "Observer.h"
 
 int objectBank[5] = {0,0,0,0,0};
+int bankSelection = 2;
 
-Set::Set(int pinsP[], int pinsR[], float gr_motor_P, float gr_motor_R, float gr_R_Alt)
+Set::Set(int pinsP[], int pinsR[], int pin_left, int pin_right, 
+         float gr_motor_P, float gr_motor_R, float gr_R_Alt)
     : mR(pinsR, gr_motor_R), mP(pinsP, gr_motor_P) {
   // needs to be given the pins for each motor to correctly work, start by setting those up
   this->gr_R_Alt = gr_R_Alt;
+  this->pin_left = pin_left;
+  this->pin_right = pin_right;
   init();
 }
 
@@ -20,10 +24,19 @@ void Set::init() {
   this->targetAlt = 0;
   this->lastUpdate = millis();
 
-  this->objectID = 0; // this will get fleshed out more, but for now let's assume that 0 is polaris
+  this->objectID = 0; // signifies the set is in manual mode
+
+  // buttons!
+  pinMode(pin_left, INPUT_PULLUP);
+  pinMode(pin_right, INPUT_PULLUP);
+  this->lastPress = millis();
+  left_prevState = HIGH;
+  right_prevState = HIGH;
 }
 
 void Set::update() {
+  checkSelection();
+
   // check to see if we need to update the location of the tracked object
   if(millis() >= lastUpdate + updateFreq) {
     // check the location of the object
@@ -150,8 +163,11 @@ void Set::setStepResolution(int res) {
 }
 
 void Set::calculateAzAlt() {
-  struct Horizon newCoords = (*objectObserver).calculatePosition(objectID);
-  setAzAlt(newCoords);
+  // check to see if we're actually tracking something
+  if(objectID != 0) {
+    struct Horizon newCoords = (*objectObserver).calculatePosition(objectID);
+    setAzAlt(newCoords);
+  }
 }
 
 void Set::trackObject(int ID) {
@@ -161,4 +177,51 @@ void Set::trackObject(int ID) {
 
 void Set::setObserver(Observer newObserver) {
   this->objectObserver = &newObserver;
+}
+
+void Set::setObjectBank(int newBank[]) {
+  for(int i = 0; i < 5; i++) {
+    objectBank[i] = newBank[i];
+  }
+  objectID = objectBank[bankSelection];
+  calculateAzAlt();
+}
+
+void Set::checkSelection() {
+  // only check buttons if we havent had a press in the last 25 ms 
+  if(millis() > lastPress + 25) {
+    lastPress = millis();
+    int selectionDiff = 0; // add or subtract button values to this. Allows simultaneous presses to cancel out easily
+
+    // first, gather the current states of the selection buttons
+    bool left_currentState = digitalRead(pin_left);
+    bool right_currentState = digitalRead(pin_right);
+
+    // only check for falling edge input (button is HIGH when unpressed)
+    if (left_currentState == LOW && left_prevState == HIGH) {
+      selectionDiff--;
+    }
+
+    if(right_currentState == LOW && right_prevState == HIGH) {
+      selectionDiff++;
+    }
+
+    // now update the bank selection based on this
+    bankSelection += selectionDiff;
+
+    // constrain bank selection to whatever it can actually be
+    bankSelection = max(0, bankSelection);
+    bankSelection = min(bankSelection, 4);
+
+    // force an update if we'ce changed the selection
+    if(selectionDiff != 0) {
+      objectID = objectBank[bankSelection];
+      calculateAzAlt();
+      lastUpdate = millis();
+    }
+
+    // finally, update our previous button presses
+    left_prevState = left_currentState;
+    right_prevState = right_currentState;
+  }
 }

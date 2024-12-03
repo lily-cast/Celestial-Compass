@@ -8,9 +8,11 @@
 // EN, STEP, DIR
 int pins_1R[3] = { 4, 3, 8 };  // green tape
 int pins_1P[3] = { 7, 6, 5 };  // yellow tape
+int set1_selectRight = 9;
+int set1_selectLeft = 10;
 
 Observer objectTracker;
-Set Set1(pins_1P, pins_1R, 48, 48, 2);
+Set Set1(pins_1P, pins_1R, set1_selectRight, set1_selectLeft, 48, 48, 2);
 
 
 void setup() {
@@ -18,29 +20,8 @@ void setup() {
   Serial.println("hello!");
   Set1.setObserver(objectTracker);
 
-  Set1.trackObject(1000);
-  
-  while(!Set1.checkMotors()) {
-    Set1.update();
-  }
-  delay(1000);
-
-  Set1.trackObject(1003);
-  while(!Set1.checkMotors()) {
-    Set1.update();
-  }
-  delay(1000);
-
-  Set1.trackObject(2002);
-  while(!Set1.checkMotors()) {
-    Set1.update();
-  }
-  delay(1000);
-
-  Set1.trackObject(2001);
-  while(!Set1.checkMotors()) {
-    Set1.update();
-  }
+  int objects[5] = {1000,1003,2000,2001,2002};
+  Set1.setObjectBank(objects);
 }
 
 void loop() {

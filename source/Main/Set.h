@@ -33,8 +33,17 @@ class Set {
 
     // timing variables
     unsigned long lastUpdate; // time since the last location update
+
+    // object selection variables and things
+    int pin_left;
+    int pin_right;
+    bool left_prevState;
+    bool right_prevState;
+    float lastPress; // time in ms since the last press, helpful to prevent bouncy buttons
+
+    void checkSelection(); // checks the object selection buttons to see if we need to change the object selection from our bank
   public:
-    Set(int pinsP[], int pinsR[], float gr_motor_P, float gr_motor_R, float gr_R_Alt);
+    Set(int pinsP[], int pinsR[], int pin_left, int pin_right, float gr_motor_P, float gr_motor_R, float gr_R_Alt);
     void init();
     void update(); // updates the position of the motors and tracking of object
     void trackObject(int ID); // tells the Set which object ID to track
@@ -45,10 +54,10 @@ class Set {
     void Set::calculateAzAlt(); // calculates azimuth and altitude
     void Set::setObserver(Observer newObserver);
 
+    void setObjectBank(int newBank[]);
+
 
     int objectID; // ID of the object current being tracked
-    int bankSelection; // the index (starting at 0) of the object being tracked in objectBank
-    int objectBank[5]; // an array of object IDs that can be incremented up and down
 
     Observer* objectObserver; // keeps track of objects
 };
