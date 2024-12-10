@@ -6,7 +6,7 @@
 
 // pin order is:
 // EN, STEP, DIR
-int pins_1R[3] = { 4, 3, 8 };  // green tape
+int pins_1R[3] = { 4, 3, 2 };  // green tape
 int pins_1P[3] = { 7, 6, 5 };  // yellow tape
 int set1_selectRight = 9;
 int set1_selectLeft = 10;

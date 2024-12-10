@@ -23,7 +23,7 @@ void Motor::init() {
     pinMode(STEP_pin, OUTPUT);
     pinMode(DIR_pin, OUTPUT);
 
-    maxAngularVelocity = 25; // the default deg/s that we want to use
+    maxAngularVelocity = 5; // the default deg/s that we want to use
     lastUpdate = millis();
     currentAngle_real = 0;
     currentAngle_geared = 0;
